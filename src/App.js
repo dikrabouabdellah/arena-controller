@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 
 import "./App.css";
 
+const API_BASE_URL = import.meta.env.VAPI_BASE_URL;
+
 const App = () => {
   const [clips, setClips] = useState([]); // State to store clips for the current layer
   const [loading, setLoading] = useState(true); // Loading state
@@ -20,7 +22,7 @@ const App = () => {
   // Fetch clips for the given layer
   const fetchClipsForLayer = (layerIndex) => {
     setLoading(true); // Show loading while fetching clips
-    fetch("http://localhost:8080/api/v1/composition")
+    fetch(API_BASE_URL)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Error fetching composition: ${response.statusText}`);
@@ -58,16 +60,15 @@ const App = () => {
     try {
       // Step 1: Select every clip in column 10 (last column) for all layers
       for (let layer = 1; layer <= totalLayers; layer++) {
-        await fetch(
-          `http://localhost:8080/api/v1/composition/layers/${layer}/clips/10/connect`,
-          { method: "POST" }
-        );
+        await fetch(`${API_BASE_URL}/layers/${layer}/clips/10/connect`, {
+          method: "POST",
+        });
         console.log(`Connected clip in column 10 for layer ${layer}.`);
       }
 
       // Step 2: Now, connect the new clip to the current layer
       const response = await fetch(
-        `http://localhost:8080/api/v1/composition/layers/${currentLayer}/clips/${clipIndex}/connect`,
+        `${API_BASE_URL}/layers/${currentLayer}/clips/${clipIndex}/connect`,
         { method: "POST" }
       );
 
