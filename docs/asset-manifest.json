@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "/arena-controller/static/css/main.891a627b.css",
-    "main.js": "/arena-controller/static/js/main.f1ebd3ac.js",
+    "main.js": "/arena-controller/static/js/main.b4933222.js",
     "static/js/453.948ca281.chunk.js": "/arena-controller/static/js/453.948ca281.chunk.js",
     "static/media/arial.ttf": "/arena-controller/static/media/arial.c54859dda733c50328d8.ttf",
     "static/media/HidayatullahDEMO.ttf": "/arena-controller/static/media/HidayatullahDEMO.2bf2b0bd6683b5b86371.ttf",
     "index.html": "/arena-controller/index.html",
     "main.891a627b.css.map": "/arena-controller/static/css/main.891a627b.css.map",
-    "main.f1ebd3ac.js.map": "/arena-controller/static/js/main.f1ebd3ac.js.map",
+    "main.b4933222.js.map": "/arena-controller/static/js/main.b4933222.js.map",
     "453.948ca281.chunk.js.map": "/arena-controller/static/js/453.948ca281.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.891a627b.css",
-    "static/js/main.f1ebd3ac.js"
+    "static/js/main.b4933222.js"
   ]
 }

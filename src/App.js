@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 import "./App.css";
 
-const API_BASE_URL = import.meta.env.VAPI_BASE_URL;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const App = () => {
   const [clips, setClips] = useState([]); // State to store clips for the current layer
