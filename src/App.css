@@ -1,38 +1,46 @@
-.App {
-  text-align: center;
+@font-face {
+  font-family: "HidayatullahDemo";
+  src: url("./HidayatullahDEMO.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+@font-face {
+  font-family: "arial";
+  src: url("./arial.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+body {
+  background-color: #fff7e3;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+h1 {
+  color: #743918;
+  font-family: "HidayatullahDemo";
+  font-size: 5vw;
 }
 
-.App-link {
-  color: #61dafb;
+.wrapper {
+  margin-top: 15vh;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.Titel {
+  justify-self: center;
+  margin-bottom: 10vh;
+}
+
+.choice {
+  background-color: #941b1e;
+  border-color: transparent;
+  font-size: 7vw;
+  padding: 7vw 5vw;
+  margin: 3vw;
+  color: #fff7e3;
+  font-family: "arial";
+}
+
+.choice_wrapper {
+  justify-self: center;
 }
