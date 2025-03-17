@@ -1,70 +1,83 @@
-# Getting Started with Create React App
+# Resolume Arena Controller React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a React-based application designed to control Resolume Arena clips remotely using its API. The app works on both desktop and mobile devices, altough it was originally made for tablet. Users can control Resolume Arena from their devivce while connected to the same local network as the computer running Resolume Arena.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Remote Control**: Manage Resolume Arena clips from a phone or other devices.
+- **Layer-Specific Clip Selection**: Dynamically fetch clips for specific layers in a composition.
+- **Customizable Names**: Assign custom names to clips for better clarity.
+- **Dynamic Layer Switching**: Automatically switch between layers after selecting a clip.
 
-### `npm start`
+## Prerequisites
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Before using this application, ensure the following requirements are met:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Resolume Arena**:
 
-### `npm test`
+  - Ensure the Resolume Arena API is enabled:
+    1. Open Resolume Arena.
+    2. Navigate to `Preferences > Webserver`.
+    3. Enable webserver & REST API.
+  - Note the Resolume API address (e.g., `http://192.168.1.100:8080`).
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **React Development Environment**:
 
-### `npm run build`
+  - Node.js installed on your system.
+  - Basic understanding of React and JavaScript.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Network Configuration**:
+  - Both the device running the app and the PC running Resolume Arena must be on the same local network.
+  - Configure your PC's firewall to allow traffic on Resolume's API port (default: 8080).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Install dependencies:
 
-### `npm run eject`
+   ```bash
+   npm install
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+2. Create a `.env` file in the root directory and set the `REACT_APP_API_BASE_URL` to your Resolume Arena API base URL:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+   ```env
+   REACT_APP_API_BASE_URL=http://192.168.1.100:8080
+   ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+3. Start the development server:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+   ```bash
+   npm start
+   ```
 
-## Learn More
+4. Open the app in your browser:
+   - On your phone and pc visit the link with your IP address (e.g., `http://192.168.1.100:3000`).
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Usage
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Open Resolume Arena
+2. Open the app on your browser or phone.
+3. Select clips by clicking on the buttons corresponding to each clip.
+4. The app will automatically switch to the next layer after selecting a clip.
 
-### Code Splitting
+### Customizing Clip Names
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+To assign custom names to clips, update the `customNames` object in the `App.js` file:
 
-### Analyzing the Bundle Size
+```javascript
+const customNames = {
+  0: "Option 1",
+  1: "Option 2",
+  2: "Option 3",
+  // Add more mappings as needed
+};
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Acknowledgments
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [Resolume Arena API Documentation](https://resolume.com/support/en/api)
+- [Create React App](https://create-react-app.dev/docs/getting-started/)
+- [Adding fonts with @font-face]{https://www.w3schools.com/cssref/atrule_font-face.php}
+- [ChatGPT](https://chatgpt.com/share/67d7e270-54a4-800e-8757-e80cbb1220d1)
+- [ChatGPT](https://chatgpt.com/share/67d7e29c-590c-800e-9b6b-a9ffc05f87d6)
+- [ChatGPT](https://chatgpt.com/share/67d7e2d3-7d1c-800e-ba6e-72562f72da3b)
