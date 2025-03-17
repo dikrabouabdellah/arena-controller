@@ -20,7 +20,7 @@ const App = () => {
   // Fetch clips for the given layer
   const fetchClipsForLayer = (layerIndex) => {
     setLoading(true); // Show loading while fetching clips
-    fetch("http://localhost:8080/api/v1/composition")
+    fetch(process.env.REACT_APP_API_BASE_URL)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Error fetching composition: ${response.statusText}`);
@@ -59,7 +59,7 @@ const App = () => {
       // Step 1: Select every clip in column 10 (last column) for all layers
       for (let layer = 1; layer <= totalLayers; layer++) {
         await fetch(
-          `http://localhost:8080/api/v1/composition/layers/${layer}/clips/10/connect`,
+          `${process.env.REACT_APP_API_BASE_URL}/layers/${layer}/clips/10/connect`,
           { method: "POST" }
         );
         console.log(`Connected clip in column 10 for layer ${layer}.`);
@@ -67,7 +67,7 @@ const App = () => {
 
       // Step 2: Now, connect the new clip to the current layer
       const response = await fetch(
-        `http://localhost:8080/api/v1/composition/layers/${currentLayer}/clips/${clipIndex}/connect`,
+        `${process.env.REACT_APP_API_BASE_URL}/layers/${currentLayer}/clips/${clipIndex}/connect`,
         { method: "POST" }
       );
 
