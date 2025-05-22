@@ -1,25 +1,29 @@
 import React, { useState, useEffect } from "react";
+import topImage from "./assets/top.png";
+import bottomImage from "./assets/bottom.png";
 
 import "./App.css";
 
 const App = () => {
-  const [clips, setClips] = useState([]); // State to store clips for the current layer
-  const [loading, setLoading] = useState(true); // Loading state
-  const [currentLayer, setCurrentLayer] = useState(1); // State to track the current layer
-  const [totalLayers, setTotalLayers] = useState(2); // Number of layers in the composition
-  const [selectedClips, setSelectedClips] = useState({}); // Store selected clips by layer
+  const [clips, setClips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentLayer, setCurrentLayer] = useState(1);
+  const [totalLayers, setTotalLayers] = useState(2);
+  const [selectedClips, setSelectedClips] = useState({});
+  const [clipRestrictions, setClipRestrictions] = useState({});
 
-  // Custom names for clips, keyed by their index or ID
-  const customNames = {
-    0: "Keuze 1",
-    1: "Keuze 2",
-    2: "Keuze 3",
-    // Add more mappings as needed
+  // Function to reset the app to its initial state
+  const resetApp = () => {
+    setCurrentLayer(1);
+    setSelectedClips({});
+    setClipRestrictions({});
+    setClips([]);
+    setLoading(true);
   };
 
   // Fetch clips for the given layer
   const fetchClipsForLayer = (layerIndex) => {
-    setLoading(true); // Show loading while fetching clips
+    setLoading(true);
     fetch(process.env.REACT_APP_API_BASE_URL)
       .then((response) => {
         if (!response.ok) {
@@ -28,17 +32,24 @@ const App = () => {
         return response.json();
       })
       .then((data) => {
-        // Assuming total layers are available in the API, but we can dynamically set this
         setTotalLayers(data.layers.length);
 
         const layer = data.layers.find(
           (layer, index) => index + 1 === layerIndex
         );
         if (layer) {
-          setClips(layer.clips || []); // Save clips from the specified layer
+          let validClips = layer.clips || [];
+
+          if (clipRestrictions[layerIndex]) {
+            validClips = validClips.filter((clip, index) =>
+              clipRestrictions[layerIndex].includes(index + 1)
+            );
+          }
+
+          setClips(validClips);
         } else {
           console.warn(`Layer ${layerIndex} not found!`);
-          setClips([]); // Clear clips if layer not found
+          setClips([]);
         }
         setLoading(false);
       })
@@ -48,24 +59,22 @@ const App = () => {
       });
   };
 
-  // Load clips for the current layer on mount or when the layer changes
   useEffect(() => {
     fetchClipsForLayer(currentLayer);
-  }, [currentLayer]);
+  }, [currentLayer, clipRestrictions]);
 
-  // Function to handle the click of a clip button
   const handleClipClick = async (clipId, clipIndex) => {
     try {
-      // Step 1: Select every clip in column 10 (last column) for all layers
-      for (let layer = 1; layer <= totalLayers; layer++) {
-        await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/layers/${layer}/clips/10/connect`,
-          { method: "POST" }
-        );
-        console.log(`Connected clip in column 10 for layer ${layer}.`);
-      }
+      // Step 1: Clear the previous choice by "clicking" clip 10 in the current layer
+      await fetch(
+        `${process.env.REACT_APP_API_BASE_URL}/layers/${currentLayer}/clips/10/connect`,
+        { method: "POST" }
+      );
+      console.log(
+        `Cleared previous selection in layer ${currentLayer} by clicking clip 10.`
+      );
 
-      // Step 2: Now, connect the new clip to the current layer
+      // Step 2: Select the new clip in the current layer
       const response = await fetch(
         `${process.env.REACT_APP_API_BASE_URL}/layers/${currentLayer}/clips/${clipIndex}/connect`,
         { method: "POST" }
@@ -74,13 +83,44 @@ const App = () => {
       if (response.ok) {
         console.log("Clip connected to composition successfully!");
 
-        // Store the selected clip for the current layer
+        // Update the selected clip for the current layer
         setSelectedClips((prev) => ({
           ...prev,
-          [currentLayer]: clipId, // Update to the newly selected clip
+          [currentLayer]: clipId,
         }));
 
-        // Step 3: Switch to the next layer
+        // Handle special behavior for specific layers
+        if (currentLayer === 3) {
+          if (clipIndex !== 2) {
+            resetApp(); // Restart app if any clip other than the second is chosen
+            return;
+          } else {
+            setCurrentLayer(4); // Proceed to layer 4
+            return;
+          }
+        }
+
+        if (currentLayer === 4) {
+          resetApp(); // Restart app after any choice in layer 4
+          return;
+        }
+
+        // Apply restrictions for the next layer if applicable
+        if (currentLayer === 2) {
+          if (clipIndex === 1) {
+            setClipRestrictions((prev) => ({
+              ...prev,
+              3: [1, 2],
+            }));
+          } else if (clipIndex === 2) {
+            setClipRestrictions((prev) => ({
+              ...prev,
+              3: [2, 3],
+            }));
+          }
+        }
+
+        // Step 3: Move to the next layer
         const nextLayer = (currentLayer % totalLayers) + 1;
         setCurrentLayer(nextLayer);
       } else {
@@ -91,35 +131,44 @@ const App = () => {
     }
   };
 
-  return (
-    <div className="wrapper">
-      <h1 className="Titel">What will you choose {currentLayer}</h1>
+  const title =
+    currentLayer === 1
+      ? "Click to start"
+      : `What will you choose ${currentLayer}`;
 
-      {loading ? (
-        <p>Loading clips...</p>
-      ) : (
-        <div className="choice_wrapper">
-          {clips.length > 0 ? (
-            clips
-              .filter((clip) => customNames[clip.id] || clip.name?.value) // Filter out empty or unnamed clips
-              .map((clip, index) => (
-                <button
-                  key={clip.id}
-                  className={`choice ${
-                    selectedClips[currentLayer] === clip.id
-                  }`}
-                  onClick={() => handleClipClick(clip.id, index + 1)} // Trigger the clip on click
-                >
-                  {customNames[index] || clip.name?.value}{" "}
-                  {/* Use custom names */}
-                </button>
-              ))
-          ) : (
-            <p>No clips available for this layer.</p>
-          )}
-        </div>
-      )}
-    </div>
+  return (
+    <>
+      <img src={topImage} alt="Top Banner" className="top-image" />
+
+      <div className="wrapper">
+        <h1 className="Titel">{title}</h1>
+
+        {loading ? (
+          <p>Loading clips...</p>
+        ) : (
+          <div className="choice_wrapper">
+            {clips.length > 0 ? (
+              clips
+                .filter((clip) => clip.name?.value?.trim())
+                .map((clip, index) => (
+                  <button
+                    key={clip.id}
+                    className={`choice ${
+                      selectedClips[currentLayer] === clip.id ? "selected" : ""
+                    }`}
+                    onClick={() => handleClipClick(clip.id, index + 1)}
+                  >
+                    {clip.name?.value}
+                  </button>
+                ))
+            ) : (
+              <p>No clips available for this layer.</p>
+            )}
+          </div>
+        )}
+      </div>
+      <img src={bottomImage} alt="Bottom Banner" className="bottom-image" />
+    </>
   );
 };
 

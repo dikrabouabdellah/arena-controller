@@ -1,46 +1,43 @@
-@font-face {
-  font-family: "HidayatullahDemo";
-  src: url("./HidayatullahDEMO.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "arial";
-  src: url("./arial.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-}
-
 body {
-  background-color: #fff7e3;
+  background-color: white;
+  font-family: "Georgia", serif;
 }
 
 h1 {
-  color: #743918;
-  font-family: "HidayatullahDemo";
   font-size: 5vw;
+  font-style: italic;
+}
+
+button {
+  background-color: black;
+  font-family: "Georgia", serif;
+  font-style: italic;
+  border-color: transparent;
+  font-size: 5vw;
+  padding: 7vw 5vw;
+  margin: 3vw;
+  color: white;
 }
 
 .wrapper {
-  margin-top: 15vh;
+  margin-top: 8vh;
+  margin-bottom: 6vh;
 }
 
 .Titel {
   justify-self: center;
-  margin-bottom: 10vh;
-}
-
-.choice {
-  background-color: #941b1e;
-  border-color: transparent;
-  font-size: 7vw;
-  padding: 7vw 5vw;
-  margin: 3vw;
-  color: #fff7e3;
-  font-family: "arial";
+  margin-bottom: 5vh;
 }
 
 .choice_wrapper {
   justify-self: center;
+}
+
+.top-image,
+.bottom-image {
+  width: 100%;
+}
+
+.top-image {
+  margin-top: 0;
 }
