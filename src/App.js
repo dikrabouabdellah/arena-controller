@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import topImage from "./assets/top.png";
 import bottomImage from "./assets/bottom.png";
-
 import "./App.css";
 
 const App = () => {
@@ -11,17 +10,17 @@ const App = () => {
   const [totalLayers, setTotalLayers] = useState(2);
   const [selectedClips, setSelectedClips] = useState({});
   const [clipRestrictions, setClipRestrictions] = useState({});
+  const [preparingSelection, setPreparingSelection] = useState(false);
 
-  // Function to reset the app to its initial state
   const resetApp = () => {
     setCurrentLayer(1);
     setSelectedClips({});
     setClipRestrictions({});
     setClips([]);
     setLoading(true);
+    setPreparingSelection(false);
   };
 
-  // Fetch clips for the given layer
   const fetchClipsForLayer = (layerIndex) => {
     setLoading(true);
     fetch(process.env.REACT_APP_API_BASE_URL)
@@ -33,19 +32,17 @@ const App = () => {
       })
       .then((data) => {
         setTotalLayers(data.layers.length);
-
         const layer = data.layers.find(
           (layer, index) => index + 1 === layerIndex
         );
+
         if (layer) {
           let validClips = layer.clips || [];
-
           if (clipRestrictions[layerIndex]) {
             validClips = validClips.filter((clip, index) =>
               clipRestrictions[layerIndex].includes(index + 1)
             );
           }
-
           setClips(validClips);
         } else {
           console.warn(`Layer ${layerIndex} not found!`);
@@ -63,69 +60,82 @@ const App = () => {
     fetchClipsForLayer(currentLayer);
   }, [currentLayer, clipRestrictions]);
 
+  const selectClip10InAllLayers = async () => {
+    setPreparingSelection(true);
+    try {
+      // Select clip 10 in ALL layers (1 through totalLayers)
+      for (let layer = 1; layer <= totalLayers; layer++) {
+        const response = await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/layers/${layer}/clips/10/connect`,
+          { method: "POST" }
+        );
+        if (!response.ok) {
+          console.warn(`Failed to select clip 10 in layer ${layer}`);
+        } else {
+          console.log(`Selected clip 10 in layer ${layer}`);
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error("Error selecting clip 10 in layers:", error);
+      return false;
+    } finally {
+      setPreparingSelection(false);
+    }
+  };
+
   const handleClipClick = async (clipId, clipIndex) => {
     try {
-      // Step 1: Clear the previous choice by "clicking" clip 10 in the current layer
-      await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/layers/${currentLayer}/clips/10/connect`,
-        { method: "POST" }
-      );
-      console.log(
-        `Cleared previous selection in layer ${currentLayer} by clicking clip 10.`
-      );
+      // First select clip 10 in ALL layers
+      const success = await selectClip10InAllLayers();
+      if (!success) return;
 
-      // Step 2: Select the new clip in the current layer
+      // Then select the clicked clip
+      setSelectedClips((prev) => ({
+        ...prev,
+        [currentLayer]: clipId,
+      }));
+
       const response = await fetch(
         `${process.env.REACT_APP_API_BASE_URL}/layers/${currentLayer}/clips/${clipIndex}/connect`,
         { method: "POST" }
       );
 
-      if (response.ok) {
-        console.log("Clip connected to composition successfully!");
-
-        // Update the selected clip for the current layer
-        setSelectedClips((prev) => ({
-          ...prev,
-          [currentLayer]: clipId,
-        }));
-
-        // Handle special behavior for specific layers
-        if (currentLayer === 3) {
-          if (clipIndex !== 2) {
-            resetApp(); // Restart app if any clip other than the second is chosen
-            return;
-          } else {
-            setCurrentLayer(4); // Proceed to layer 4
-            return;
-          }
-        }
-
-        if (currentLayer === 4) {
-          resetApp(); // Restart app after any choice in layer 4
-          return;
-        }
-
-        // Apply restrictions for the next layer if applicable
-        if (currentLayer === 2) {
-          if (clipIndex === 1) {
-            setClipRestrictions((prev) => ({
-              ...prev,
-              3: [1, 2],
-            }));
-          } else if (clipIndex === 2) {
-            setClipRestrictions((prev) => ({
-              ...prev,
-              3: [2, 3],
-            }));
-          }
-        }
-
-        // Step 3: Move to the next layer
-        const nextLayer = (currentLayer % totalLayers) + 1;
-        setCurrentLayer(nextLayer);
-      } else {
-        console.error("Failed to connect the clip to composition");
+      if (!response.ok) {
+        throw new Error("Failed to connect the clip to composition");
       }
+
+      console.log("Clip connected to composition successfully!");
+
+      // Special layer handling
+      if (currentLayer === 3 && clipIndex !== 2) {
+        resetApp();
+        return;
+      }
+
+      if (currentLayer === 4) {
+        resetApp();
+        return;
+      }
+
+      // FIXED: Proper clip restrictions mapping for layer 3
+      if (currentLayer === 2) {
+        // When clip 1 is selected in layer 2, show clips [1,2] in layer 3
+        // When clip 2 is selected in layer 2, show clips [2,3] in layer 3
+        // But map them to correct Resolume indices
+        const layer3Mapping = {
+          1: [1, 2], // UI choice 1 -> Resolume clip 1, choice 2 -> clip 2
+          2: [2, 3], // UI choice 1 -> Resolume clip 2, choice 2 -> clip 3
+        };
+        setClipRestrictions((prev) => ({
+          ...prev,
+          3: layer3Mapping[clipIndex],
+        }));
+      }
+
+      // Move to next layer
+      const nextLayer = (currentLayer % totalLayers) + 1;
+      setCurrentLayer(nextLayer);
     } catch (error) {
       console.error("Error handling clip click:", error);
     }
@@ -139,12 +149,12 @@ const App = () => {
   return (
     <>
       <img src={topImage} alt="Top Banner" className="top-image" />
-
       <div className="wrapper">
         <h1 className="Titel">{title}</h1>
-
-        {loading ? (
-          <p>Loading clips...</p>
+        {loading || preparingSelection ? (
+          <p>
+            {preparingSelection ? "Preparing selection..." : "Loading clips..."}
+          </p>
         ) : (
           <div className="choice_wrapper">
             {clips.length > 0 ? (
