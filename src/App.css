@@ -41,3 +41,22 @@ button {
 .top-image {
   margin-top: 0;
 }
+
+@media (max-width: 1200px) {
+  h1 {
+    color: red;
+  }
+
+  .bottom-image {
+    margin-top: 14vh;
+  }
+
+  .Titel,
+  .choice_wrapper {
+    margin-left: 33%;
+  }
+
+  .wrapper {
+    margin-top: 10%;
+  }
+}
