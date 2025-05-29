@@ -114,16 +114,15 @@ const App = () => {
     }
   };
 
-  const title =
-    currentLayer === 1
-      ? "Click to start"
-      : `What will you choose ${currentLayer}`;
+  const title = currentLayer === 1 ? "Click to start" : `What will you choose`;
 
   return (
     <>
       <img src={topImage} alt="Top Banner" className="top-image" />
       <div className="wrapper">
-        <h1 className="Titel">{title}</h1>
+        <h1 className={`Titel ${currentLayer === 1 ? "first-title" : ""}`}>
+          {title}
+        </h1>
         {loading || preparingSelection ? (
           <p>
             {preparingSelection ? "Preparing selection..." : "Loading clips..."}
@@ -145,6 +144,8 @@ const App = () => {
                         selectedClips[currentLayer] === clip.id
                           ? "selected"
                           : ""
+                      } ${
+                        index === 0 && currentLayer === 1 ? "first-choice" : ""
                       }`}
                       onClick={() =>
                         handleClipClick(clip.id, resolumeClipNumber)
