@@ -74,9 +74,11 @@ button {
 
   .waiting-title {
     margin-bottom: 67vh;
+    margin-left: 200px;
   }
 
   .final-waiting-title {
     margin-bottom: 79vh;
+    margin-left: 170px;
   }
 }

@@ -162,7 +162,9 @@ const App = () => {
 
   const getTitle = () => {
     if (waitingForNextChoice) {
-      return isFinalWaitingScreen ? "" : "Wait for the next choice";
+      return isFinalWaitingScreen
+        ? "Enjoy the end of the story!"
+        : "Wait for the next choice";
     }
     return currentLayer === 1 ? "Click to start" : "What will you choose";
   };
@@ -179,7 +181,11 @@ const App = () => {
       <img src={topImage} alt="Top Banner" className="top-image" />
       <div className="wrapper">
         <h1 className={`Titel ${getTitleClassName()}`}>{getTitle()}</h1>
-        {waitingForNextChoice ? null : loading || preparingSelection ? (
+        {waitingForNextChoice ? (
+          isFinalWaitingScreen ? (
+            <p>Thank you for participating!</p>
+          ) : null
+        ) : loading || preparingSelection ? (
           <p>
             {preparingSelection ? "Preparing selection..." : "Loading clips..."}
           </p>
