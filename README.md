@@ -6,8 +6,8 @@ This project is a React-based application designed to control Resolume Arena cli
 
 - **Remote Control**: Manage Resolume Arena clips from a phone or other devices.
 - **Layer-Specific Clip Selection**: Dynamically fetch clips for specific layers in a composition.
-- **Customizable Names**: Assign custom names to clips for better clarity.
 - **Dynamic Layer Switching**: Automatically switch between layers after selecting a clip.
+- **Time based selection**: Enter the length of the clip before giving the next choices.
 
 ## Prerequisites
 
@@ -60,19 +60,6 @@ Before using this application, ensure the following requirements are met:
 3. Select clips by clicking on the buttons corresponding to each clip.
 4. The app will automatically switch to the next layer after selecting a clip.
 
-### Customizing Clip Names
-
-To assign custom names to clips, update the `customNames` object in the `App.js` file:
-
-```javascript
-const customNames = {
-  0: "Option 1",
-  1: "Option 2",
-  2: "Option 3",
-  // Add more mappings as needed
-};
-```
-
 ## Acknowledgments
 
 - [Resolume Arena API Documentation](https://resolume.com/support/en/api)
@@ -81,3 +68,4 @@ const customNames = {
 - [ChatGPT](https://chatgpt.com/share/67d7e270-54a4-800e-8757-e80cbb1220d1)
 - [ChatGPT](https://chatgpt.com/share/67d7e29c-590c-800e-9b6b-a9ffc05f87d6)
 - [ChatGPT](https://chatgpt.com/share/67d7e2d3-7d1c-800e-ba6e-72562f72da3b)
+- [Deepseek](https://chat.deepseek.com/a/chat/s/ee1ef30c-ab67-40a6-bb8e-983168057044)
