@@ -1,9 +1,21 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { QRCode } from "react-qrcode-logo";
 
 const QRController = () => {
-  const sessionId = Date.now(); // This creates a unique session ID
+  const [sessionId, setSessionId] = useState(() => {
+    return localStorage.getItem("sessionId") || Date.now().toString();
+  });
   const voteUrl = `${window.location.origin}/arena-controller/vote/${sessionId}`;
+  const [started, setStarted] = useState(false);
+
+  const startVoting = () => {
+    localStorage.setItem(`voting_started_${sessionId}`, "true");
+    setStarted(true);
+  };
+
+  useEffect(() => {
+    localStorage.setItem("sessionId", sessionId);
+  }, [sessionId]);
 
   return (
     <div className="qr-page">
@@ -12,6 +24,12 @@ const QRController = () => {
       <p>
         Session ID: <strong>{sessionId}</strong>
       </p>
+
+      {!started ? (
+        <button onClick={startVoting}>Start Voting</button>
+      ) : (
+        <p>✅ Voting started! Waiting for votes...</p>
+      )}
     </div>
   );
 };

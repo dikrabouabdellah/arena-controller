@@ -7,14 +7,24 @@ const VotingApp = () => {
   const [selected, setSelected] = useState(null);
   const [votes, setVotes] = useState({});
   const [clips, setClips] = useState([]);
+  const [votingStarted, setVotingStarted] = useState(false);
 
   const layerIndex = 1;
+  // Change this number to how many voters you're expecting
+  const EXPECTED_VOTE_COUNT = 3;
 
   const handleVote = (clipId, clipName) => {
-    const voteData = JSON.parse(localStorage.getItem(sessionId)) || {};
-    const userId = `user_${Math.random().toString(36).slice(2)}`;
+    const userId =
+      localStorage.getItem("userId") ||
+      `user_${Math.random().toString(36).slice(2)}`;
+    localStorage.setItem("userId", userId);
+
+    const voteKey = `votes_${sessionId}`;
+    const voteData = JSON.parse(localStorage.getItem(voteKey)) || {};
+
     voteData[userId] = clipId;
-    localStorage.setItem(sessionId, JSON.stringify(voteData));
+    localStorage.setItem(voteKey, JSON.stringify(voteData));
+
     setSelected(clipName);
     setVoted(true);
   };
@@ -35,15 +45,53 @@ const VotingApp = () => {
   useEffect(() => {
     const totalVotes = Object.keys(votes).length;
 
-    // Change this number to how many voters you're expecting
-    const EXPECTED_VOTE_COUNT = 3;
-
     if (totalVotes >= EXPECTED_VOTE_COUNT) {
       triggerMajorityClip();
     }
   }, [votes]);
 
-  // Get the most voted clipId
+  useEffect(() => {
+    const checkStart = () => {
+      const isStarted =
+        localStorage.getItem(`voting_started_${sessionId}`) === "true";
+      setVotingStarted(isStarted);
+    };
+
+    checkStart();
+    const interval = setInterval(checkStart, 1000); // poll every second
+    return () => clearInterval(interval);
+  }, [sessionId]);
+
+  useEffect(() => {
+    const voteKey = `votes_${sessionId}`;
+
+    const updateVotes = () => {
+      const voteData = JSON.parse(localStorage.getItem(voteKey)) || {};
+      const tally = {};
+
+      Object.values(voteData).forEach((clipId) => {
+        tally[clipId] = (tally[clipId] || 0) + 1;
+      });
+
+      setVotes(tally);
+    };
+
+    updateVotes();
+    const interval = setInterval(updateVotes, 1000);
+    return () => clearInterval(interval);
+  }, [sessionId]);
+
+  useEffect(() => {
+    const voteIds = Object.keys(votes);
+    if (voteIds.length >= EXPECTED_VOTE_COUNT) {
+      // Prevent retriggering multiple times
+      if (!localStorage.getItem(`triggered_${sessionId}`)) {
+        triggerMajorityClip();
+        localStorage.setItem(`triggered_${sessionId}`, "true");
+      }
+    }
+  }, [votes, sessionId]);
+
   const getMajorityClipId = () => {
     const sorted = Object.entries(votes).sort((a, b) => b[1] - a[1]);
     return sorted[0]?.[0]; // This is the clipId
@@ -55,33 +103,44 @@ const VotingApp = () => {
     return clip?.name?.value || "N/A";
   };
 
-  // Trigger the majority clip via Resolume API
   const triggerMajorityClip = async () => {
-    const clipId = getMajorityClipId();
-    if (!clipId) return;
+    const majorityClipId = Object.entries(votes).sort(
+      (a, b) => b[1] - a[1]
+    )[0]?.[0];
+    if (!majorityClipId) return;
 
-    // Find index of this clip in the current clips array
-    const index = clips.findIndex((clip) => clip.id === clipId);
-    if (index === -1) return;
+    const clipIndex = clips.findIndex((clip) => clip.id === majorityClipId);
+    if (clipIndex === -1) return;
 
     try {
       await fetch(
         `${process.env.REACT_APP_API_BASE_URL}/layers/${layerIndex}/clips/${
-          index + 1
+          clipIndex + 1
         }/connect`,
-        { method: "POST" }
+        {
+          method: "POST",
+        }
       );
-      console.log("🎬 Triggered Resolume clip:", clipId);
+      console.log("Triggered Resolume clip:", majorityClipId);
     } catch (error) {
-      console.error("❌ Error triggering Resolume clip:", error);
+      console.error("Error triggering Resolume clip:", error);
     }
+  };
+
+  const resetVoting = () => {
+    localStorage.removeItem(`votes_${sessionId}`);
+    localStorage.removeItem(`triggered_${sessionId}`);
+    localStorage.removeItem(`voting_started_${sessionId}`);
+    window.location.reload();
   };
 
   return (
     <div className="vote-page">
       <h2>Vote for the Next Scene</h2>
 
-      {!voted ? (
+      {!votingStarted ? (
+        <p>⏳ Waiting for the session to start...</p>
+      ) : !voted ? (
         clips.map((clip, idx) => (
           <button
             key={clip.id}
@@ -98,15 +157,20 @@ const VotingApp = () => {
 
       <div className="tally">
         <h3>Live Results</h3>
-        {Object.entries(votes).map(([option, count]) => (
-          <p key={option}>
-            {option}: {count}
-          </p>
-        ))}
+        {Object.entries(votes).map(([clipId, count]) => {
+          const clip = clips.find((c) => c.id === clipId);
+          const label = clip?.name?.value || "Unknown";
+          return (
+            <p key={clipId}>
+              {label}: {count}
+            </p>
+          );
+        })}
         <p>
           <strong>Majority:</strong> {getMajorityClipName()}
         </p>
       </div>
+      <button onClick={resetVoting}>Reset Voting Session</button>
     </div>
   );
 };
