@@ -5,7 +5,7 @@ import VotingApp from "./VotingApp";
 
 const App = () => {
   return (
-    <Router>
+    <Router basename="/arena-controller">
       <Routes>
         <Route path="/" element={<QRController />} />
         <Route path="/vote/:sessionId" element={<VotingApp />} />
