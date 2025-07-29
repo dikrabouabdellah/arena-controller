@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
+// Layer-based clip durations (in seconds)
+const CLIP_DURATIONS = {
+  1: [2],
+  2: [3, 5],
+  3: [1, 9, 3],
+  4: [4, 1],
+};
+
 const VotingApp = () => {
   const { sessionId } = useParams(); // get session from URL
   const [voted, setVoted] = useState(false);
@@ -103,21 +111,29 @@ const VotingApp = () => {
   useEffect(() => {
     if (!showWaiting) return;
 
-    const wait = Number(localStorage.getItem("wait_time") || 15); // fallback 15s
+    const clipIndex = Number(localStorage.getItem("last_clip_index") || 0);
+    const layerDurations = CLIP_DURATIONS[layerIndex] || [];
+    const duration = layerDurations[clipIndex] || 15; // fallback to 15s if not found
+
+    console.log(
+      `⏳ Waiting ${duration}s before next round (Layer ${layerIndex}, Clip #${
+        clipIndex + 1
+      })`
+    );
 
     const timeout = setTimeout(() => {
-      // Move to next layer (simulate new round)
-      localStorage.removeItem(`votes_${sessionId}`);
-      localStorage.removeItem(`triggered_${sessionId}`);
+      localStorage.removeItem(`votes_${sessionId}_${layerIndex}`);
+      localStorage.removeItem(`triggered_${sessionId}_${layerIndex}`);
+      localStorage.removeItem("last_clip_index");
       setVoted(false);
       setSelected(null);
       setShowWaiting(false);
       setTimer(30);
       setLayerIndex((prev) => prev + 1);
-    }, wait * 1000);
+    }, duration * 1000);
 
     return () => clearTimeout(timeout);
-  }, [showWaiting, sessionId]);
+  }, [showWaiting, sessionId, layerIndex]);
 
   const getMajorityClipId = () => {
     const sorted = Object.entries(votes).sort((a, b) => b[1] - a[1]);
@@ -152,6 +168,8 @@ const VotingApp = () => {
     const clipIndex = clips.findIndex(
       (clip) => String(clip.id) === String(majorityClipId)
     );
+
+    localStorage.setItem("last_clip_index", clipIndex);
 
     if (clipIndex === -1) {
       console.log("Majority clip not found in clips list.");
