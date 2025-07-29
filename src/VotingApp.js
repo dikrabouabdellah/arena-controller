@@ -9,8 +9,8 @@ const VotingApp = () => {
   const [clips, setClips] = useState([]);
   const [votingStarted, setVotingStarted] = useState(false);
   const [timer, setTimer] = useState(30);
-
-  const layerIndex = 1;
+  const [showWaiting, setShowWaiting] = useState(false);
+  const [layerIndex, setLayerIndex] = useState(1);
 
   const handleVote = (clipId, clipName) => {
     const userId =
@@ -18,7 +18,7 @@ const VotingApp = () => {
       `user_${Math.random().toString(36).slice(2)}`;
     localStorage.setItem("userId", userId);
 
-    const voteKey = `votes_${sessionId}`;
+    const voteKey = `votes_${sessionId}_${layerIndex}`;
     const voteData = JSON.parse(localStorage.getItem(voteKey)) || {};
 
     voteData[userId] = clipId;
@@ -32,14 +32,19 @@ const VotingApp = () => {
     fetch(process.env.REACT_APP_API_BASE_URL)
       .then((res) => res.json())
       .then((data) => {
-        const layer = data.layers[layerIndex - 1]; // index is 0-based
+        const layer = data.layers[layerIndex - 1];
         const validClips = (layer?.clips || []).filter((clip) =>
           clip.name?.value?.trim()
         );
         setClips(validClips);
+        setVotes({});
+        setSelected(null);
+        setVoted(false);
+        setTimer(30);
+        localStorage.removeItem(`triggered_${sessionId}`);
       })
       .catch((err) => console.error("Error fetching clips:", err));
-  }, []);
+  }, [layerIndex]);
 
   useEffect(() => {
     const checkStart = () => {
@@ -54,7 +59,7 @@ const VotingApp = () => {
   }, [sessionId]);
 
   useEffect(() => {
-    const voteKey = `votes_${sessionId}`;
+    const voteKey = `votes_${sessionId}_${layerIndex}`;
 
     const updateVotes = () => {
       const voteData = JSON.parse(localStorage.getItem(voteKey)) || {};
@@ -73,20 +78,19 @@ const VotingApp = () => {
   }, [sessionId]);
 
   useEffect(() => {
-    if (!votingStarted) return;
-
-    setTimer(30); // reset timer on voting start
+    if (!votingStarted || clips.length === 0) return;
 
     const countdown = setInterval(() => {
       setTimer((prev) => {
         if (prev <= 1) {
           clearInterval(countdown);
-
-          if (!localStorage.getItem(`triggered_${sessionId}`)) {
-            triggerMajorityClip(); // this is the key line
-            localStorage.setItem(`triggered_${sessionId}`, "true");
+          if (!localStorage.getItem(`triggered_${sessionId}_${layerIndex}`)) {
+            triggerMajorityClip(); // ✅ This now also handles waiting
+            localStorage.setItem(
+              `triggered_${sessionId}_${layerIndex}`,
+              "true"
+            );
           }
-
           return 0;
         }
         return prev - 1;
@@ -94,7 +98,26 @@ const VotingApp = () => {
     }, 1000);
 
     return () => clearInterval(countdown);
-  }, [votingStarted, sessionId]);
+  }, [votingStarted, clips, sessionId, layerIndex]);
+
+  useEffect(() => {
+    if (!showWaiting) return;
+
+    const wait = Number(localStorage.getItem("wait_time") || 15); // fallback 15s
+
+    const timeout = setTimeout(() => {
+      // Move to next layer (simulate new round)
+      localStorage.removeItem(`votes_${sessionId}`);
+      localStorage.removeItem(`triggered_${sessionId}`);
+      setVoted(false);
+      setSelected(null);
+      setShowWaiting(false);
+      setTimer(30);
+      setLayerIndex((prev) => prev + 1);
+    }, wait * 1000);
+
+    return () => clearTimeout(timeout);
+  }, [showWaiting, sessionId]);
 
   const getMajorityClipId = () => {
     const sorted = Object.entries(votes).sort((a, b) => b[1] - a[1]);
@@ -110,7 +133,7 @@ const VotingApp = () => {
   const triggerMajorityClip = async () => {
     console.log("Triggering clip now");
 
-    const voteKey = `votes_${sessionId}`;
+    const voteKey = `votes_${sessionId}_${layerIndex}`;
     const voteData = JSON.parse(localStorage.getItem(voteKey)) || {};
     const tally = {};
 
@@ -153,6 +176,8 @@ const VotingApp = () => {
     } catch (error) {
       console.error("Error triggering Resolume clip:", error);
     }
+
+    setShowWaiting(true);
   };
 
   const resetVoting = () => {
@@ -169,6 +194,8 @@ const VotingApp = () => {
 
       {!votingStarted ? (
         <p>⏳ Waiting for the session to start...</p>
+      ) : showWaiting ? (
+        <p>🕓 Waiting for next round to begin...</p>
       ) : !voted ? (
         clips.map((clip, idx) => (
           <button

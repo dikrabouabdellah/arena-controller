@@ -20,11 +20,16 @@ const QRController = () => {
 
   const voteUrl = `${window.location.origin}/arena-controller/vote/${sessionId}`;
   const [started, setStarted] = useState(false);
+  const [waitTime, setWaitTime] = useState(15); // default 15 seconds
 
   const startVoting = () => {
     localStorage.setItem(`voting_started_${sessionId}`, "true");
     setStarted(true);
   };
+
+  useEffect(() => {
+    localStorage.setItem("wait_time", waitTime);
+  }, [waitTime]);
 
   useEffect(() => {
     localStorage.setItem("sessionId", sessionId);
