@@ -8,10 +8,9 @@ const VotingApp = () => {
   const [votes, setVotes] = useState({});
   const [clips, setClips] = useState([]);
   const [votingStarted, setVotingStarted] = useState(false);
+  const [timer, setTimer] = useState(30);
 
   const layerIndex = 1;
-  // Change this number to how many voters you're expecting
-  const EXPECTED_VOTE_COUNT = 3;
 
   const handleVote = (clipId, clipName) => {
     const userId =
@@ -41,14 +40,6 @@ const VotingApp = () => {
       })
       .catch((err) => console.error("Error fetching clips:", err));
   }, []);
-
-  useEffect(() => {
-    const totalVotes = Object.keys(votes).length;
-
-    if (totalVotes >= EXPECTED_VOTE_COUNT) {
-      triggerMajorityClip();
-    }
-  }, [votes]);
 
   useEffect(() => {
     const checkStart = () => {
@@ -82,15 +73,28 @@ const VotingApp = () => {
   }, [sessionId]);
 
   useEffect(() => {
-    const voteIds = Object.keys(votes);
-    if (voteIds.length >= EXPECTED_VOTE_COUNT) {
-      // Prevent retriggering multiple times
-      if (!localStorage.getItem(`triggered_${sessionId}`)) {
-        triggerMajorityClip();
-        localStorage.setItem(`triggered_${sessionId}`, "true");
-      }
-    }
-  }, [votes, sessionId]);
+    if (!votingStarted) return;
+
+    setTimer(30); // reset timer on voting start
+
+    const countdown = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdown);
+
+          if (!localStorage.getItem(`triggered_${sessionId}`)) {
+            triggerMajorityClip(); // this is the key line
+            localStorage.setItem(`triggered_${sessionId}`, "true");
+          }
+
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdown);
+  }, [votingStarted, sessionId]);
 
   const getMajorityClipId = () => {
     const sorted = Object.entries(votes).sort((a, b) => b[1] - a[1]);
@@ -104,16 +108,35 @@ const VotingApp = () => {
   };
 
   const triggerMajorityClip = async () => {
-    const majorityClipId = Object.entries(votes).sort(
-      (a, b) => b[1] - a[1]
-    )[0]?.[0];
-    if (!majorityClipId) return;
+    console.log("Triggering clip now");
 
-    const clipIndex = clips.findIndex((clip) => clip.id === majorityClipId);
-    if (clipIndex === -1) return;
+    const voteKey = `votes_${sessionId}`;
+    const voteData = JSON.parse(localStorage.getItem(voteKey)) || {};
+    const tally = {};
+
+    Object.values(voteData).forEach((clipId) => {
+      tally[clipId] = (tally[clipId] || 0) + 1;
+    });
+
+    const sorted = Object.entries(tally).sort((a, b) => b[1] - a[1]);
+    const majorityClipId = sorted[0]?.[0];
+
+    if (!majorityClipId) {
+      console.log("No majority clip ID found.");
+      return;
+    }
+
+    const clipIndex = clips.findIndex(
+      (clip) => String(clip.id) === String(majorityClipId)
+    );
+
+    if (clipIndex === -1) {
+      console.log("Majority clip not found in clips list.");
+      return;
+    }
 
     try {
-      await fetch(
+      const res = await fetch(
         `${process.env.REACT_APP_API_BASE_URL}/layers/${layerIndex}/clips/${
           clipIndex + 1
         }/connect`,
@@ -121,7 +144,12 @@ const VotingApp = () => {
           method: "POST",
         }
       );
-      console.log("Triggered Resolume clip:", majorityClipId);
+      console.log(
+        "Triggered Resolume clip:",
+        majorityClipId,
+        "Status:",
+        res.status
+      );
     } catch (error) {
       console.error("Error triggering Resolume clip:", error);
     }
@@ -137,6 +165,7 @@ const VotingApp = () => {
   return (
     <div className="vote-page">
       <h2>Vote for the Next Scene</h2>
+      <p>⏱️ Time left: {timer} seconds</p>
 
       {!votingStarted ? (
         <p>⏳ Waiting for the session to start...</p>

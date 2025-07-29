@@ -3,8 +3,21 @@ import { QRCode } from "react-qrcode-logo";
 
 const QRController = () => {
   const [sessionId, setSessionId] = useState(() => {
-    return localStorage.getItem("sessionId") || Date.now().toString();
+    // Clean up old sessions
+    Object.keys(localStorage).forEach((key) => {
+      if (
+        key.startsWith("votes_") ||
+        key.startsWith("voting_started_") ||
+        key.startsWith("triggered_") ||
+        key === "sessionId"
+      ) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    return Date.now().toString();
   });
+
   const voteUrl = `${window.location.origin}/arena-controller/vote/${sessionId}`;
   const [started, setStarted] = useState(false);
 
