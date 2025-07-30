@@ -16,7 +16,7 @@ const VotingApp = () => {
   const [votes, setVotes] = useState({});
   const [clips, setClips] = useState([]);
   const [votingStarted, setVotingStarted] = useState(false);
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(15);
   const [showWaiting, setShowWaiting] = useState(false);
   const [layerIndex, setLayerIndex] = useState(1);
 
@@ -41,14 +41,31 @@ const VotingApp = () => {
       .then((res) => res.json())
       .then((data) => {
         const layer = data.layers[layerIndex - 1];
-        const validClips = (layer?.clips || []).filter((clip) =>
+        let validClips = (layer?.clips || []).filter((clip) =>
           clip.name?.value?.trim()
         );
+
+        // Layer 3 branching logic
+        if (layerIndex === 3) {
+          const pathChoice = Number(
+            localStorage.getItem("path_choice_from_layer2")
+          );
+
+          if (pathChoice === 0) {
+            // Voted Clip 1 in Layer 2 → show Clip 1 & 2 of Layer 3
+            validClips = validClips.slice(0, 2);
+          } else if (pathChoice === 1) {
+            // Voted Clip 2 in Layer 2 → show Clip 2 & 3 of Layer 3
+            validClips = validClips.slice(1, 3);
+          }
+        }
+
         setClips(validClips);
+
         setVotes({});
         setSelected(null);
         setVoted(false);
-        setTimer(30);
+        setTimer(15);
         localStorage.removeItem(`triggered_${sessionId}`);
       })
       .catch((err) => console.error("Error fetching clips:", err));
@@ -128,7 +145,7 @@ const VotingApp = () => {
       setVoted(false);
       setSelected(null);
       setShowWaiting(false);
-      setTimer(30);
+      setTimer(15);
       setLayerIndex((prev) => prev + 1);
     }, duration * 1000);
 
@@ -169,32 +186,42 @@ const VotingApp = () => {
       (clip) => String(clip.id) === String(majorityClipId)
     );
 
-    localStorage.setItem("last_clip_index", clipIndex);
-
     if (clipIndex === -1) {
       console.log("Majority clip not found in clips list.");
       return;
     }
 
+    // 🔁 Store selected clip index for logic (e.g., branching)
+    localStorage.setItem("last_clip_index", clipIndex);
+    if (layerIndex === 2) {
+      localStorage.setItem("path_choice_from_layer2", clipIndex);
+    }
+
     try {
-      const res = await fetch(
+      // ✅ 1. Trigger ALL clips in column 10 (across all layers)
+      for (let layer = 1; layer <= 10; layer++) {
+        await fetch(
+          `${process.env.REACT_APP_API_BASE_URL}/layers/${layer}/clips/10/connect`,
+          { method: "POST" }
+        );
+        console.log(`Triggered Layer ${layer}, Column 10`);
+      }
+
+      // ✅ 2. Trigger the majority clip in the current layer
+      await fetch(
         `${process.env.REACT_APP_API_BASE_URL}/layers/${layerIndex}/clips/${
           clipIndex + 1
         }/connect`,
-        {
-          method: "POST",
-        }
+        { method: "POST" }
       );
       console.log(
-        "Triggered Resolume clip:",
-        majorityClipId,
-        "Status:",
-        res.status
+        `Triggered voted clip: Layer ${layerIndex}, Clip ${clipIndex + 1}`
       );
     } catch (error) {
-      console.error("Error triggering Resolume clip:", error);
+      console.error("Error triggering clips:", error);
     }
 
+    console.log("✅ Clip triggered, entering waiting state...");
     setShowWaiting(true);
   };
 
