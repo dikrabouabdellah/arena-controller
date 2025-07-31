@@ -127,9 +127,10 @@ const VotingApp = () => {
   useEffect(() => {
     if (!showWaiting) return;
 
+    // 🟩 Read ONCE and store it
     const clipIndex = Number(localStorage.getItem("last_clip_index") || 0);
     const layerDurations = CLIP_DURATIONS[layerIndex] || [];
-    const duration = layerDurations[clipIndex] || 15; // fallback to 15s if not found
+    const duration = layerDurations[clipIndex] || 15;
 
     console.log(
       `⏳ Waiting ${duration}s before next round (Layer ${layerIndex}, Clip #${
@@ -138,14 +139,29 @@ const VotingApp = () => {
     );
 
     const timeout = setTimeout(() => {
+      // 🟥 Don't read it again — use the saved variable
+      console.log("🔍 Debug: last_clip_index is", clipIndex);
+
+      const nextLayerIndex =
+        layerIndex === 3
+          ? clipIndex === 1
+            ? (console.log("➡️ User chose clip 2 in Layer 3 → showing Layer 4"),
+              4)
+            : (console.log(
+                "➡️ User chose a different clip in Layer 3 → skipping to Layer 5"
+              ),
+              5)
+          : layerIndex + 1;
+
       localStorage.removeItem(`votes_${sessionId}_${layerIndex}`);
       localStorage.removeItem(`triggered_${sessionId}_${layerIndex}`);
       localStorage.removeItem("last_clip_index");
+
       setVoted(false);
       setSelected(null);
       setShowWaiting(false);
       setTimer(15);
-      setLayerIndex((prev) => prev + 1);
+      setLayerIndex(nextLayerIndex);
     }, duration * 1000);
 
     return () => clearTimeout(timeout);
@@ -191,7 +207,16 @@ const VotingApp = () => {
     }
 
     // 🔁 Store selected clip index for logic (e.g., branching)
-    localStorage.setItem("last_clip_index", votedClip.columnIndex - 1);
+    console.log("🔍 Triggering clip:", votedClip);
+
+    if (typeof votedClip.columnIndex === "number") {
+      const index = votedClip.columnIndex - 1;
+      localStorage.setItem("last_clip_index", index);
+      console.log("✅ Stored last_clip_index:", index);
+    } else {
+      console.warn("⚠️ No columnIndex found on votedClip!", votedClip);
+    }
+
     if (layerIndex === 2) {
       localStorage.setItem(
         "path_choice_from_layer2",
