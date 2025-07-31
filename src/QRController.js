@@ -18,12 +18,15 @@ const QRController = () => {
     return Date.now().toString();
   });
 
-  const voteUrl = `${window.location.origin}/arena-controller/vote/${sessionId}`;
+  const voteUrl = `${process.env.REACT_APP_LOCAL_IP}/arena-controller/vote/${sessionId}`;
   const [started, setStarted] = useState(false);
   const [waitTime, setWaitTime] = useState(15); // default 15 seconds
 
   const startVoting = () => {
-    localStorage.setItem(`voting_started_${sessionId}`, "true");
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/start-session/${sessionId}`, {
+      method: "POST",
+    });
+
     setStarted(true);
   };
 

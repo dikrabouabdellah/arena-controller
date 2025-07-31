@@ -72,9 +72,10 @@ const VotingApp = () => {
 
   useEffect(() => {
     const checkStart = () => {
-      const isStarted =
-        localStorage.getItem(`voting_started_${sessionId}`) === "true";
-      setVotingStarted(isStarted);
+      fetch(`${process.env.REACT_APP_BACKEND_URL}/session-status/${sessionId}`)
+        .then((res) => res.json())
+        .then((data) => setVotingStarted(data.started))
+        .catch((err) => console.error("Error checking session:", err));
     };
 
     checkStart();
