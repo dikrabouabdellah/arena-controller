@@ -41,9 +41,9 @@ const VotingApp = () => {
       .then((res) => res.json())
       .then((data) => {
         const layer = data.layers[layerIndex - 1];
-        let validClips = (layer?.clips || []).filter((clip) =>
-          clip.name?.value?.trim()
-        );
+        let validClips = (layer?.clips || [])
+          .map((clip, index) => ({ ...clip, columnIndex: index + 1 }))
+          .filter((clip) => clip.name?.value?.trim());
 
         // Layer 3 branching logic
         if (layerIndex === 3) {
@@ -51,13 +51,12 @@ const VotingApp = () => {
             localStorage.getItem("path_choice_from_layer2")
           );
 
-          if (pathChoice === 0) {
-            // Voted Clip 1 in Layer 2 → show Clip 1 & 2 of Layer 3
-            validClips = validClips.slice(0, 2);
-          } else if (pathChoice === 1) {
-            // Voted Clip 2 in Layer 2 → show Clip 2 & 3 of Layer 3
-            validClips = validClips.slice(1, 3);
-          }
+          const allowedClipIndices =
+            pathChoice === 0 ? [0, 1] : pathChoice === 1 ? [1, 2] : [];
+
+          validClips = validClips.filter((clip) =>
+            allowedClipIndices.includes(clip.columnIndex - 1)
+          );
         }
 
         setClips(validClips);
@@ -182,24 +181,27 @@ const VotingApp = () => {
       return;
     }
 
-    const clipIndex = clips.findIndex(
+    const votedClip = clips.find(
       (clip) => String(clip.id) === String(majorityClipId)
     );
 
-    if (clipIndex === -1) {
+    if (!votedClip) {
       console.log("Majority clip not found in clips list.");
       return;
     }
 
     // 🔁 Store selected clip index for logic (e.g., branching)
-    localStorage.setItem("last_clip_index", clipIndex);
+    localStorage.setItem("last_clip_index", votedClip.columnIndex - 1);
     if (layerIndex === 2) {
-      localStorage.setItem("path_choice_from_layer2", clipIndex);
+      localStorage.setItem(
+        "path_choice_from_layer2",
+        votedClip.columnIndex - 1
+      );
     }
 
     try {
       // ✅ 1. Trigger ALL clips in column 10 (across all layers)
-      for (let layer = 1; layer <= 10; layer++) {
+      for (let layer = 1; layer <= 5; layer++) {
         await fetch(
           `${process.env.REACT_APP_API_BASE_URL}/layers/${layer}/clips/10/connect`,
           { method: "POST" }
@@ -209,13 +211,12 @@ const VotingApp = () => {
 
       // ✅ 2. Trigger the majority clip in the current layer
       await fetch(
-        `${process.env.REACT_APP_API_BASE_URL}/layers/${layerIndex}/clips/${
-          clipIndex + 1
-        }/connect`,
+        `${process.env.REACT_APP_API_BASE_URL}/layers/${layerIndex}/clips/${votedClip.columnIndex}/connect`,
         { method: "POST" }
       );
+
       console.log(
-        `Triggered voted clip: Layer ${layerIndex}, Clip ${clipIndex + 1}`
+        `Triggered voted clip: Layer ${layerIndex}, Clip ${votedClip.columnIndex}`
       );
     } catch (error) {
       console.error("Error triggering clips:", error);
