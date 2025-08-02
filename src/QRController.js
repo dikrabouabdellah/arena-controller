@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { QRCode } from "react-qrcode-logo";
+import "./QRController.css";
+import "./VotingApp.css";
 
 const QRController = () => {
   const [sessionId, setSessionId] = useState(() => {
@@ -39,18 +41,26 @@ const QRController = () => {
   }, [sessionId]);
 
   return (
-    <div className="qr-page">
-      <h1>Scan to Vote</h1>
-      <QRCode value={voteUrl} size={256} />
-      <p>
-        Session ID: <strong>{sessionId}</strong>
-      </p>
+    <div className="wrapper">
+      <img src={require("./assets/top.png")} alt="Top" className="top-image" />
+      <div className="qr-page">
+        <h1>Scan to Vote</h1>
+        <QRCode value={voteUrl} size={256} />
+        <p>
+          Session ID: <strong>{sessionId}</strong>
+        </p>
 
-      {!started ? (
-        <button onClick={startVoting}>Start Voting</button>
-      ) : (
-        <p>✅ Voting started! Waiting for votes...</p>
-      )}
+        {!started ? (
+          <button onClick={startVoting}>Start Voting</button>
+        ) : (
+          <p>✅ Voting started! Waiting for votes...</p>
+        )}
+      </div>
+      <img
+        src={require("./assets/bottom.png")}
+        alt="Bottom"
+        className="bottom-image"
+      />
     </div>
   );
 };

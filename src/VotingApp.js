@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
+import "./VotingApp.css";
+import "./QRController.css";
 
 // Layer-based clip durations (in seconds)
 const CLIP_DURATIONS = {
@@ -234,44 +236,52 @@ const VotingApp = () => {
   };
 
   return (
-    <div className="vote-page">
-      <h2>Vote for the Next Scene</h2>
-      <p>⏱️ Time left: {timer} seconds</p>
+    <div className="wrapper">
+      <img src={require("./assets/top.png")} alt="Top" className="top-image" />
+      <div className="vote-page">
+        <h2>Vote for the Next Scene</h2>
+        <p>⏱️ Time left: {timer} seconds</p>
 
-      {!votingStarted ? (
-        <p>⏳ Waiting for the session to start...</p>
-      ) : showWaiting ? (
-        <p>🕓 Waiting for next round to begin...</p>
-      ) : !voted ? (
-        clips.map((clip) => (
-          <button
-            key={clip.id}
-            onClick={() => handleVote(clip.id, clip.name.value)}
-          >
-            {clip.name.value}
-          </button>
-        ))
-      ) : (
-        <p>
-          You voted for <strong>{selected}</strong>. Waiting for others...
-        </p>
-      )}
+        {!votingStarted ? (
+          <p>⏳ Waiting for the session to start...</p>
+        ) : showWaiting ? (
+          <p>🕓 Waiting for next round to begin...</p>
+        ) : !voted ? (
+          clips.map((clip) => (
+            <button
+              key={clip.id}
+              onClick={() => handleVote(clip.id, clip.name.value)}
+            >
+              {clip.name.value}
+            </button>
+          ))
+        ) : (
+          <p>
+            You voted for <strong>{selected}</strong>. Waiting for others...
+          </p>
+        )}
 
-      <div className="tally">
-        <h3>Live Results</h3>
-        {Object.entries(votes).map(([clipId, count]) => {
-          const clip = clips.find((c) => String(c.id) === String(clipId));
-          const label = clip?.name?.value || "Unknown";
-          return (
-            <p key={clipId}>
-              {label}: {count}
-            </p>
-          );
-        })}
-        <p>
-          <strong>Majority:</strong> {getMajorityClipName()}
-        </p>
+        <div className="tally">
+          <h3>Live Results</h3>
+          {Object.entries(votes).map(([clipId, count]) => {
+            const clip = clips.find((c) => String(c.id) === String(clipId));
+            const label = clip?.name?.value || "Unknown";
+            return (
+              <p key={clipId}>
+                {label}: {count}
+              </p>
+            );
+          })}
+          <p>
+            <strong>Majority:</strong> {getMajorityClipName()}
+          </p>
+        </div>
       </div>
+      <img
+        src={require("./assets/bottom.png")}
+        alt="Bottom"
+        className="bottom-image"
+      />
     </div>
   );
 };
