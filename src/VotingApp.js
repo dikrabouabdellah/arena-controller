@@ -6,9 +6,9 @@ import "./QRController.css";
 // Layer-based clip durations (in seconds)
 const CLIP_DURATIONS = {
   1: [106],
-  2: [3, 5],
-  3: [1, 9, 3],
-  4: [4, 1],
+  2: [57, 50],
+  3: [54, 56, 83],
+  4: [78, 46],
 };
 
 const VotingApp = () => {
