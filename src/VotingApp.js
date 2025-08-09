@@ -19,7 +19,7 @@ const VotingApp = () => {
   const votesRef = useRef({}); // Ref to keep latest votes
   const [clips, setClips] = useState([]);
   const [votingStarted, setVotingStarted] = useState(false);
-  const [timer, setTimer] = useState(15);
+  const [timer, setTimer] = useState(30);
   const [showWaiting, setShowWaiting] = useState(false);
   const [layerIndex, setLayerIndex] = useState(1);
 
@@ -78,7 +78,7 @@ const VotingApp = () => {
         setVotes({});
         setSelected(null);
         setVoted(false);
-        setTimer(15);
+        setTimer(30);
         localStorage.removeItem(`triggered_${sessionId}_${layerIndex}`);
       })
       .catch((err) => console.error("Error fetching clips:", err));
@@ -151,7 +151,7 @@ const VotingApp = () => {
 
     const clipIndex = Number(localStorage.getItem("last_clip_index") || 0);
     const layerDurations = CLIP_DURATIONS[layerIndex] || [];
-    const duration = layerDurations[clipIndex] || 15;
+    const duration = layerDurations[clipIndex] || 30;
 
     const timeout = setTimeout(() => {
       const nextLayerIndex =
@@ -164,7 +164,7 @@ const VotingApp = () => {
       setVoted(false);
       setSelected(null);
       setShowWaiting(false);
-      setTimer(15);
+      setTimer(30);
       setLayerIndex(nextLayerIndex);
     }, duration * 1000);
 
