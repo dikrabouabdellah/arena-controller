@@ -51,9 +51,11 @@ const QRController = () => {
         </p>
 
         {!started ? (
-          <button onClick={startVoting}>Start Voting</button>
+          <button id="start-voting-btn" onClick={startVoting}>
+            Start Voting
+          </button>
         ) : (
-          <p>✅ Voting started! Waiting for votes...</p>
+          <p>Voting started!</p>
         )}
       </div>
       <img

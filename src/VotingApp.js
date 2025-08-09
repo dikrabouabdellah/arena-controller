@@ -5,7 +5,7 @@ import "./QRController.css";
 
 // Layer-based clip durations (in seconds)
 const CLIP_DURATIONS = {
-  1: [2],
+  1: [106],
   2: [3, 5],
   3: [1, 9, 3],
   4: [4, 1],
@@ -180,7 +180,7 @@ const VotingApp = () => {
   const getMajorityClipName = () => {
     const majorityId = getMajorityClipId();
     const clip = clips.find((clip) => clip.id === majorityId);
-    return clip?.name?.value || "N/A";
+    return clip?.name?.value || "-";
   };
 
   const triggerMajorityClip = async () => {
@@ -240,12 +240,12 @@ const VotingApp = () => {
       <img src={require("./assets/top.png")} alt="Top" className="top-image" />
       <div className="vote-page">
         <h2>Vote for the Next Scene</h2>
-        <p>⏱️ Time left: {timer} seconds</p>
+        <p>Time left: {timer} seconds</p>
 
         {!votingStarted ? (
-          <p>⏳ Waiting for the session to start...</p>
+          <p>Waiting for the session to start...</p>
         ) : showWaiting ? (
-          <p>🕓 Waiting for next round to begin...</p>
+          <p>Waiting for next round to begin...</p>
         ) : !voted ? (
           clips.map((clip) => (
             <button
@@ -256,13 +256,14 @@ const VotingApp = () => {
             </button>
           ))
         ) : (
-          <p>
-            You voted for <strong>{selected}</strong>. Waiting for others...
+          <p className="voted-message">
+            You voted for <strong>{selected}</strong>. <br /> <br />
+            Waiting for others...
           </p>
         )}
 
         <div className="tally">
-          <h3>Live Results</h3>
+          <h3>Live Results:</h3>
           {Object.entries(votes).map(([clipId, count]) => {
             const clip = clips.find((c) => String(c.id) === String(clipId));
             const label = clip?.name?.value || "Unknown";
@@ -272,9 +273,6 @@ const VotingApp = () => {
               </p>
             );
           })}
-          <p>
-            <strong>Majority:</strong> {getMajorityClipName()}
-          </p>
         </div>
       </div>
       <img

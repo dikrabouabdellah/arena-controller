@@ -3,7 +3,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: top;
-  height: 80vh;
+  height: 77vh;
   background-color: white;
   font-family: "Georgia", serif;
+  margin-top: 8vh;
+}
+
+.tally {
+  text-align: center;
+}
+
+.voted-message {
+  text-align: center;
 }
